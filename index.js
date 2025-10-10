@@ -2,7 +2,7 @@
 
 const app = require('./src/app');
 
-//inicializar nuestro servirdo 
+//inicializar nuestro servidor
 
 app.listen(app.get('port'), ()=> {
 

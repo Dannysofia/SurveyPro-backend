@@ -1,34 +1,46 @@
-// controllers/userController.js
+const bcrypt = require('bcryptjs');
 const userModel = require('../models/userModel');
 
-// Controlador para guardar un usuario
+// POST /usuarios  -> Registrar usuario (RF01)
 async function guardarUsuario(req, res) {
-  const { nombre, correo, password } = req.body;
-
   try {
-    // Verificar si ya existe el correo
+    let { nombre, apellido, correo, password } = req.body;
+
+    if (!nombre || !correo || !password) {
+      return res.status(400).json({ error: 'nombre, correo y password son obligatorios' });
+    }
+
+    correo = String(correo).trim().toLowerCase();
+
     const existeUsuario = await userModel.obtenerUsuarioPorCorreo(correo);
     if (existeUsuario) {
       return res.status(400).json({ error: 'El correo ya está registrado' });
     }
 
-    // Guardar el nuevo usuario
-    const nuevoUsuario = await userModel.insertarUsuario(nombre, correo, password);
-    res.status(201).json(nuevoUsuario);
+    // Encriptar contraseña
+    const saltRounds = 10;
+    const passwordHash = await bcrypt.hash(password, saltRounds);
+
+    const nuevoUsuario = await userModel.insertarUsuario(nombre, apellido, correo, passwordHash);
+
+    // Responder solo datos públicos
+    return res.status(201).json({
+      message: 'Usuario creado correctamente',
+      user: nuevoUsuario,
+    });
   } catch (error) {
-    console.error('Error al guardar el usuario:', error.message);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    console.error('Error al guardar el usuario:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
   }
 }
 
-// Controlador para obtener todos los usuarios
-async function obtenerUsuarios(req, res) {
+async function obtenerUsuarios(_req, res) {
   try {
     const usuarios = await userModel.obtenerUsuarios();
-    res.status(200).json(usuarios);
+    return res.status(200).json(usuarios);
   } catch (error) {
-    console.error('Error al obtener los usuarios:', error.message);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    console.error('Error al obtener los usuarios:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
   }
 }
 

@@ -1,5 +1,3 @@
-//variables del sistema
-
 module.exports = {
     //asignar puerto 
     app: {
