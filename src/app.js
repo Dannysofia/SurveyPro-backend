@@ -5,6 +5,8 @@ const cors = require('cors');
 // Importar rutas
 const userRoutes = require('./routes/userRoutes');
 const authRoutes = require('./routes/authRoutes');
+const surveyRoutes = require('./routes/surveyRoutes');
+const questionTypeRoutes = require('./routes/questionTypeRoutes');
 
 const app = express();
 
@@ -16,5 +18,7 @@ app.use(express.json());
 // Usar las rutas de usuarios
 app.use('/usuarios', userRoutes);
 app.use('/auth', authRoutes);
+app.use('/encuestas', surveyRoutes);
+app.use('/tipos-pregunta', questionTypeRoutes);
 
 module.exports = app;
