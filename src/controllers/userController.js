@@ -1,7 +1,6 @@
 const bcrypt = require('bcryptjs');
 const userModel = require('../models/userModel');
 
-// POST /usuarios  -> Registrar usuario (RF01)
 async function guardarUsuario(req, res) {
   try {
     let { nombre, apellido, correo, password } = req.body;
