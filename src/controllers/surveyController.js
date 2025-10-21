@@ -5,14 +5,14 @@ const optionModel = require('../models/optionModel');
 // ENCUESTAS
 async function crearEncuesta(req, res) {
   try {
-    const { owner_id, title, description, status } = req.body;
+    const { owner_id, title, description, status, color, logo_url } = req.body;
     if (!owner_id || !title) {
       return res.status(400).json({ error: 'owner_id y title son obligatorios' });
     }
     if (status && !['Activo', 'Cerrado'].includes(status)) {
       return res.status(400).json({ error: "status debe ser 'Activo' o 'Cerrado'" });
     }
-    const encuesta = await surveyModel.crearEncuesta({ owner_id, title: String(title).trim(), description, status });
+    const encuesta = await surveyModel.crearEncuesta({ owner_id, title: String(title).trim(), description, status, color, logo_url });
     return res.status(201).json(encuesta);
   } catch (error) {
     console.error('Error al crear encuesta:', error);
@@ -58,11 +58,11 @@ async function obtenerEncuestaPorToken(req, res) {
 async function actualizarEncuesta(req, res) {
   try {
     const { survey_id } = req.params;
-    const { title, description, status } = req.body;
+    const { title, description, status, color, logo_url } = req.body;
     if (status && !['Activo', 'Cerrado'].includes(status)) {
       return res.status(400).json({ error: "status debe ser 'Activo' o 'Cerrado'" });
     }
-    const encuesta = await surveyModel.actualizarEncuesta(survey_id, { title, description, status });
+    const encuesta = await surveyModel.actualizarEncuesta(survey_id, { title, description, status, color, logo_url });
     if (!encuesta) return res.status(404).json({ error: 'Encuesta no encontrada' });
     return res.status(200).json(encuesta);
   } catch (error) {
