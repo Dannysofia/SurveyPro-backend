@@ -8,7 +8,7 @@ const userRoutes = require('./routes/userRoutes');
 const authRoutes = require('./routes/authRoutes');
 const surveyRoutes = require('./routes/surveyRoutes');
 const questionTypeRoutes = require('./routes/questionTypeRoutes');
-
+const uploadRoutes = require('./routes/uploadRoutes');
 
 const app = express();
 
@@ -16,12 +16,13 @@ const app = express();
 app.set('port', config.app.port);
 app.use(cors());
 app.use(express.json());
-
+// Servir archivos estáticos subidos
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // Usar las rutas de usuarios
 app.use('/usuarios', userRoutes);
 app.use('/auth', authRoutes);
-
+app.use('/uploads', uploadRoutes);
 app.use('/encuestas', surveyRoutes);
 app.use('/tipos-pregunta', questionTypeRoutes);
 

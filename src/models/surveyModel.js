@@ -5,21 +5,21 @@ function generarTokenPublico() {
   return crypto.randomBytes(12).toString('hex'); // 24 chars
 }
 
-async function crearEncuesta({ owner_id, title, description, status, color, logo_url }) {
+async function crearEncuesta({ owner_id, title, description, status, color }) {
   const public_token = generarTokenPublico();
   const query = `
-    INSERT INTO surveys (owner_id, title, description, public_token, status, color, logo_url)
-    VALUES ($1, $2, $3, $4, COALESCE($5, 'Activo'), $6, $7)
-    RETURNING survey_id, owner_id, title, description, public_token, status, color, logo_url, created_at
+    INSERT INTO surveys (owner_id, title, description, public_token, status, color)
+    VALUES ($1, $2, $3, $4, COALESCE($5, 'Activo'), $6)
+    RETURNING survey_id, owner_id, title, description, public_token, status, color, created_at
   `;
-  const values = [owner_id, title, description || null, public_token, status || null, color || null, logo_url || null];
+  const values = [owner_id, title, description || null, public_token, status || null, color || null];
   const result = await db.query(query, values);
   return result.rows[0];
 }
 
 async function obtenerEncuestas({ owner_id } = {}) {
   let query = `
-    SELECT survey_id, owner_id, title, description, public_token, status, color, logo_url, created_at
+    SELECT survey_id, owner_id, title, description, public_token, status, color, created_at
     FROM surveys
   `;
   const values = [];
@@ -34,7 +34,7 @@ async function obtenerEncuestas({ owner_id } = {}) {
 
 async function obtenerEncuestaPorId(survey_id) {
   const query = `
-    SELECT survey_id, owner_id, title, description, public_token, status, color, logo_url, created_at
+    SELECT survey_id, owner_id, title, description, public_token, status, color, created_at
     FROM surveys
     WHERE survey_id = $1
     LIMIT 1
@@ -45,7 +45,7 @@ async function obtenerEncuestaPorId(survey_id) {
 
 async function obtenerEncuestaPorToken(public_token) {
   const query = `
-    SELECT survey_id, owner_id, title, description, public_token, status, color, logo_url, created_at
+    SELECT survey_id, owner_id, title, description, public_token, status, color, created_at
     FROM surveys
     WHERE public_token = $1
     LIMIT 1
@@ -54,18 +54,17 @@ async function obtenerEncuestaPorToken(public_token) {
   return result.rows[0] || null;
 }
 
-async function actualizarEncuesta(survey_id, { title, description, status, color, logo_url }) {
+async function actualizarEncuesta(survey_id, { title, description, status, color }) {
   const query = `
     UPDATE surveys
     SET title = COALESCE($2, title),
         description = COALESCE($3, description),
         status = COALESCE($4, status),
-        color = COALESCE($5, color),
-        logo_url = COALESCE($6, logo_url)
+        color = COALESCE($5, color)
     WHERE survey_id = $1
-    RETURNING survey_id, owner_id, title, description, public_token, status, color, logo_url, created_at
+    RETURNING survey_id, owner_id, title, description, public_token, status, color, created_at
   `;
-  const values = [survey_id, title || null, description || null, status || null, color || null, logo_url || null];
+  const values = [survey_id, title || null, description || null, status || null, color || null];
   const result = await db.query(query, values);
   return result.rows[0] || null;
 }
