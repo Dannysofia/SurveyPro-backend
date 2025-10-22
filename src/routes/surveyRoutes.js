@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const surveyController = require('../controllers/surveyController');
+const responseController = require('../controllers/responseController');
 
 // Encuestas
 router.post('/', surveyController.crearEncuesta);
@@ -26,5 +27,12 @@ router.post('/preguntas/:question_id/opciones', surveyController.crearOpcion);
 router.get('/preguntas/:question_id/opciones', surveyController.listarOpciones);
 router.put('/opciones/:option_id', surveyController.actualizarOpcion);
 router.delete('/opciones/:option_id', surveyController.eliminarOpcion);
+
+// Respuestas
+router.post('/:survey_id/respuestas', responseController.enviarRespuestasPorSurveyId);
+router.post('/publico/:token/respuestas', responseController.enviarRespuestasPorToken);
+router.get('/:survey_id/respuestas', responseController.listarRespuestas);
+router.get('/:survey_id/respuestas/estadisticas', responseController.obtenerEstadisticas);
+router.get('/:survey_id/respuestas/vista', responseController.listarRespuestasVista);
 
 module.exports = router;
