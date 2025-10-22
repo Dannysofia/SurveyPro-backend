@@ -1,6 +1,6 @@
 const db = require('../db');
 
-async function listRecentSurveys({ ownerId, limit = 5 }) {
+async function listRecentSurveys({ ownerId, limit = 6 }) {
     const query = `
     SELECT survey_id, title, description, public_token, status, created_at
     FROM surveys

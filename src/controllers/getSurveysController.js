@@ -3,7 +3,7 @@ const surveyRepo = require('../models/getSurveysModel');
 async function listRecentSurveys(req, res) {
     try {
         const ownerId = req.user.id;
-        const limit = parseInt(req.query.limit) || 5;
+        const limit = parseInt(req.query.limit) || 6;
 
         const surveys = await surveyRepo.listRecentSurveys({ ownerId, limit });
 
@@ -25,7 +25,7 @@ async function getHomeSummary(req, res) {
 
         return res.status(200).json({
             message: 'Resumen obtenido correctamente',
-            summary,
+            summary
         });
     } catch (error) {
         console.error('Error en getHomeSummary:', error);

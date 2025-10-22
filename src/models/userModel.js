@@ -22,18 +22,31 @@ async function insertarUsuario(name, last_name, email, passwordHash) {
   return result.rows[0];
 }
 
-async function obtenerUsuarios() {
+async function obtenerUsuarioPorId(id) {
   const query = `
-    SELECT id, name, last_name, email, created_at
+    SELECT name, last_name, email, created_at
     FROM users
-    ORDER BY created_at DESC
+    WHERE id = $1
   `;
-  const result = await db.query(query);
-  return result.rows;
+  const result = await db.query(query, [id]);
+  return result.rows[0] || null;
+}
+
+async function actualizarUsuario(id, name, last_name, email) {
+  const query = `
+    UPDATE users
+    SET name = $2, last_name = $3, email = $4
+    WHERE id = $1
+    RETURNING id, name, last_name, email, created_at
+  `;
+  const values = [id, name, last_name || null, email];
+  const result = await db.query(query, values);
+  return result.rows[0];
 }
 
 module.exports = {
   obtenerUsuarioPorCorreo,
   insertarUsuario,
-  obtenerUsuarios,
+  obtenerUsuarioPorId,
+  actualizarUsuario
 };
