@@ -1,5 +1,7 @@
 # Ignorar dependencias
 node_modules/
+npm-debug.log
+package-lock.json
 
 # Ignorar configuraciones del entorno
 .env
