@@ -1,17 +1,5 @@
 const db = require('../db');
 
-async function listRecentSurveys({ ownerId, limit = 6 }) {
-    const query = `
-    SELECT survey_id, title, description, public_token, status, created_at
-    FROM surveys
-    WHERE owner_id = $1
-    ORDER BY created_at DESC
-    LIMIT $2`;
-
-    const { rows } = await db.query(query, [ownerId, limit]);
-    return rows;
-}
-
 async function getHomeSummary({ ownerId }) {
     const surveysCountQuery = `
     SELECT COUNT(*)::int AS total_surveys
@@ -36,6 +24,5 @@ async function getHomeSummary({ ownerId }) {
 }
 
 module.exports = {
-    listRecentSurveys,
     getHomeSummary
 };

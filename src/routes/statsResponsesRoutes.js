@@ -1,10 +1,10 @@
+// statsRoutes.js
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware');
-const getSurveysController = require('../controllers/getSurveysController');
+const { dailyResponses } = require('../controllers/statsResponsesController');
 
 router.use(authMiddleware);
-
-router.get('/summary', getSurveysController.getHomeSummary);
+router.get('/daily-responses', dailyResponses);
 
 module.exports = router;

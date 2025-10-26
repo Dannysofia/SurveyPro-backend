@@ -10,7 +10,7 @@ const getSurveysRoutes = require('./routes/getSurveysRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const surveyRoutes = require('./routes/surveyRoutes');
 const questionTypeRoutes = require('./routes/questionTypeRoutes');
-
+const statsRoutes = require('./routes/statsResponsesRoutes');
 
 const app = express();
 
@@ -23,14 +23,11 @@ app.use(express.json());
 // Usar las rutas de usuarios
 app.use('/usuarios', userRoutes);
 app.use('/auth', authRoutes);
-<<<<<<< HEAD
-
-=======
 app.use('/surveys', getSurveysRoutes);
 app.use('/profile', profileRoutes);
->>>>>>> 01a1d5ceb3c549a0d5d09674ddef5e2b4de37bc3
 app.use('/encuestas', surveyRoutes);
 app.use('/tipos-pregunta', questionTypeRoutes);
+app.use('/stats', statsRoutes);
 
 module.exports = app;
 
