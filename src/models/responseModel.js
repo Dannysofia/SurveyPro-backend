@@ -1,5 +1,35 @@
 const db = require('../db');
 
+// Normalizadores para tolerar distintos nombres de campos que puede enviar el frontend
+function pickTextValue(a) {
+  const candidates = [a?.value_text, a?.answer_text, a?.text, a?.value]
+  for (const c of candidates) {
+    if (c != null && String(c).trim() !== '') return String(c)
+  }
+  return null
+}
+
+function pickNumberValue(a) {
+  const candidates = [a?.value_number, a?.number, a?.value, a?.answer_number, a?.value_text]
+  for (const c of candidates) {
+    if (c == null) continue
+    const n = Number(c)
+    if (!Number.isNaN(n)) return String(n)
+  }
+  return null
+}
+
+function pickSingleOptionId(a) {
+  return a?.option_id ?? a?.selected_option_id ?? a?.option ?? null
+}
+
+function pickMultipleOptionIds(a) {
+  if (Array.isArray(a?.option_ids)) return a.option_ids
+  if (Array.isArray(a?.options)) return a.options
+  const single = pickSingleOptionId(a)
+  return single ? [single] : []
+}
+
 function normalizarTipo(typeNameRaw) {
   const t = String(typeNameRaw || '').toLowerCase();
   if (t.includes('multi')) return 'multiple_choice';
@@ -82,8 +112,9 @@ async function crearRespuestaPorSurveyId({ survey_id, submitted_by = null, answe
       }
       const tipo = p.kind;
       if (p.is_required) {
-        const tieneTexto = a.value_text != null && String(a.value_text).trim() !== '';
-        const tieneOpcion = a.option_id || (Array.isArray(a.option_ids) && a.option_ids.length > 0);
+        const tieneTexto = !!pickTextValue(a);
+        const opts = tipo === 'multiple_choice' ? pickMultipleOptionIds(a) : pickSingleOptionId(a);
+        const tieneOpcion = Array.isArray(opts) ? opts.length > 0 : !!opts;
         if (!tieneTexto && !tieneOpcion) {
           throw new Error('RESPUESTA_REQUERIDA_FALTA');
         }
@@ -109,7 +140,7 @@ async function crearRespuestaPorSurveyId({ survey_id, submitted_by = null, answe
       const tipo = p.kind;
 
       if (tipo === 'multiple_choice') {
-        const optionIds = Array.isArray(a.option_ids) ? a.option_ids : [];
+        const optionIds = pickMultipleOptionIds(a);
         if (optionIds.length === 0 && p.is_required) {
           throw new Error('RESPUESTA_REQUERIDA_FALTA');
         }
@@ -122,7 +153,7 @@ async function crearRespuestaPorSurveyId({ survey_id, submitted_by = null, answe
           );
         }
       } else if (tipo === 'single_choice') {
-        const optId = a.option_id || null;
+        const optId = pickSingleOptionId(a);
         if (!optId) {
           if (p.is_required) throw new Error('RESPUESTA_REQUERIDA_FALTA');
         } else {
@@ -134,7 +165,7 @@ async function crearRespuestaPorSurveyId({ survey_id, submitted_by = null, answe
           [response_id, qid, optId]
         );
       } else if (tipo === 'rating' || tipo === 'number') {
-        const val = a.value_number != null ? String(a.value_number) : (a.value_text != null ? String(a.value_text) : null);
+        const val = pickNumberValue(a);
         if ((val == null || String(val).trim() === '') && p.is_required) {
           throw new Error('RESPUESTA_REQUERIDA_FALTA');
         }
@@ -144,7 +175,7 @@ async function crearRespuestaPorSurveyId({ survey_id, submitted_by = null, answe
         );
       } else {
         // texto por defecto
-        const val = a.value_text != null ? String(a.value_text) : null;
+        const val = pickTextValue(a);
         if ((val == null || String(val).trim() === '') && p.is_required) {
           throw new Error('RESPUESTA_REQUERIDA_FALTA');
         }
@@ -202,10 +233,14 @@ async function listarRespuestas(survey_id) {
       answer_id: row.answer_id,
       question_id: row.question_id,
       question_text: row.question_text,
+      position: row.position,
       type_key: row.type_key || normalizarTipo(row.type_name),
       selected_option_id: row.selected_option_id,
       option_label: row.option_label,
       answer_text: row.answer_text,
+      // alias para compatibilidad con el frontend
+      value_text: row.answer_text,
+      text: row.answer_text,
     });
   }
   return Array.from(byResp.values());
@@ -221,32 +256,115 @@ function agruparRespuestas(responses) {
           question_id: a.question_id,
           question_text: a.question_text,
           type_key: a.type_key,
+          position: a.position,
           answer_text: null,
           option_ids: [],
           option_labels: [],
+          // camelCase aliases esperados por algunos frontends
+          optionIds: [],
+          optionLabels: [],
+          // aliases comunes
+          selected_option_ids: [],
+          selected_option_labels: [],
+          selectedOptionIds: [],
+          selectedOptionLabels: [],
+          value_text: null,
+          text: null,
+          value: null,
         });
       }
       const g = grouped.get(key);
       if (a.selected_option_id) {
         g.option_ids.push(a.selected_option_id);
         if (a.option_label) g.option_labels.push(a.option_label);
+        // mantener camelCase en sincronía
+        g.optionIds = g.option_ids;
+        g.optionLabels = g.option_labels;
+        // aliases
+        g.selected_option_ids = g.option_ids;
+        g.selected_option_labels = g.option_labels;
+        g.selectedOptionIds = g.option_ids;
+        g.selectedOptionLabels = g.option_labels;
       }
       if (a.answer_text && !g.answer_text) {
         g.answer_text = a.answer_text;
+        g.value_text = a.answer_text;
+        g.text = a.answer_text;
+        g.value = a.answer_text;
       }
     }
+    // ordenar por posición si está disponible
+    const answers = Array.from(grouped.values()).sort((x, y) => {
+      const px = typeof x.position === 'number' ? x.position : 0
+      const py = typeof y.position === 'number' ? y.position : 0
+      return px - py
+    }).map(g => ({
+      ...g,
+      // asegurar alias camelCase presentes
+      optionIds: g.optionIds || g.option_ids,
+      optionLabels: g.optionLabels || g.option_labels,
+      selectedOptionIds: g.selectedOptionIds || g.selected_option_ids,
+      selectedOptions: g.selectedOptionIds || g.selected_option_ids,
+      // representación de texto lista para mostrar
+      answer_display: (g.answer_text && String(g.answer_text).trim() !== '')
+        ? g.answer_text
+        : (g.option_labels && g.option_labels.length ? g.option_labels.join(', ') : null)
+    }))
+
     return {
       response_id: r.response_id,
       submitted_at: r.submitted_at,
       submitted_by: r.submitted_by,
-      answers: Array.from(grouped.values()),
+      answers,
     };
   });
 }
 
 async function listarRespuestasFormateadas(survey_id) {
   const raw = await listarRespuestas(survey_id);
-  return agruparRespuestas(raw);
+  const grouped = agruparRespuestas(raw);
+
+  // Cargar todas las opciones de las preguntas del survey para poder marcar seleccionadas
+  const qAllOpts = `
+    SELECT q.question_id, o.option_id, o.option_label, o.position
+    FROM survey_questions q
+    JOIN question_options o ON o.question_id = q.question_id
+    WHERE q.survey_id = $1
+    ORDER BY q.position ASC, o.position ASC
+  `;
+  const rAllOpts = await db.query(qAllOpts, [survey_id]);
+  const optsByQ = new Map();
+  for (const row of rAllOpts.rows) {
+    const k = String(row.question_id);
+    if (!optsByQ.has(k)) optsByQ.set(k, []);
+    optsByQ.get(k).push({
+      option_id: row.option_id,
+      option_label: row.option_label,
+      position: row.position,
+    });
+  }
+
+  // Enriquecer cada respuesta con las opciones y su flag 'selected'
+  for (const r of grouped) {
+    for (const a of r.answers) {
+      const all = optsByQ.get(String(a.question_id)) || [];
+      const selectedSet = new Set((a.option_ids || []).map(String));
+      a.options = all.map(opt => ({
+        option_id: opt.option_id,
+        option_label: opt.option_label,
+        position: opt.position,
+        selected: selectedSet.has(String(opt.option_id)),
+        checked: selectedSet.has(String(opt.option_id)),
+      }));
+      // Alias para frontends que esperan selectedOptions
+      a.selected_option_ids = a.option_ids;
+      a.selectedOptions = a.option_ids;
+      a.selectedOptionIds = a.option_ids;
+      a.selectedOptionId = Array.isArray(a.option_ids) && a.option_ids.length ? a.option_ids[0] : null;
+    }
+  }
+
+  return grouped;
 }
 
 async function obtenerEstadisticas(survey_id) {
