@@ -2,11 +2,16 @@ const express = require('express');
 const router = express.Router();
 const surveyController = require('../controllers/surveyController');
 const responseController = require('../controllers/responseController');
+const authMiddleware = require('../middleware/authMiddleware');
+
+router.get('/publico/:token', surveyController.obtenerEncuestaPorToken);
+router.post('/publico/:token/respuestas', responseController.enviarRespuestasPorToken);
+
+router.use(authMiddleware);
 
 // Encuestas
 router.post('/', surveyController.crearEncuesta);
 router.get('/', surveyController.listarEncuestas);
-router.get('/publico/:token', surveyController.obtenerEncuestaPorToken);
 router.get('/:survey_id', surveyController.obtenerEncuesta);
 router.put('/:survey_id', surveyController.actualizarEncuesta);
 router.delete('/:survey_id', surveyController.eliminarEncuesta);
@@ -30,7 +35,6 @@ router.delete('/opciones/:option_id', surveyController.eliminarOpcion);
 
 // Respuestas
 router.post('/:survey_id/respuestas', responseController.enviarRespuestasPorSurveyId);
-router.post('/publico/:token/respuestas', responseController.enviarRespuestasPorToken);
 router.get('/:survey_id/respuestas', responseController.listarRespuestas);
 router.get('/:survey_id/respuestas/estadisticas', responseController.obtenerEstadisticas);
 router.get('/:survey_id/respuestas/vista', responseController.listarRespuestasVista);
