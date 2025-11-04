@@ -1,7 +1,34 @@
 const jwt = require('jsonwebtoken');
+const surveyModel = require('../models/surveyModel');
 
-function authMiddleware(req, res, next) {
+async function authMiddleware(req, res, next) {
     try {
+        // Permitir sin Authorization para encuestas públicas activas en rutas específicas
+        // GET /encuestas/:id/detalle
+        // POST /encuestas/:id/respuestas
+        if (req.baseUrl === '/encuestas') {
+            let surveyId = null;
+            let match = null;
+            if (req.method === 'GET') {
+                match = req.path.match(/^\/([^\/]+)\/detalle$/);
+            } else if (req.method === 'POST') {
+                match = req.path.match(/^\/([^\/]+)\/respuestas$/);
+            }
+            if (match) {
+                surveyId = match[1];
+            }
+            if (surveyId) {
+                try {
+                    const encuesta = await surveyModel.obtenerEncuestaPorId(surveyId);
+                    if (encuesta && encuesta.public_token != null && encuesta.status === 'Activo') {
+                        return next();
+                    }
+                } catch (e) {
+                    console.error('Error consultando encuesta en authMiddleware:', e.message);
+                    // Si falla la consulta, continúa con validación normal de JWT
+                }
+            }
+        }
         const authHeader = req.header('Authorization');
 
         if (!authHeader) {
