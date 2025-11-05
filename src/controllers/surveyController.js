@@ -59,11 +59,12 @@ async function obtenerEncuestaPorToken(req, res) {
 async function actualizarEncuesta(req, res) {
   try {
     const { survey_id } = req.params;
+    //const owner_id = req.user.id;
     const { title, description, status, color } = req.body;
     if (status && !['Activo', 'Cerrado'].includes(status)) {
       return res.status(400).json({ error: "status debe ser 'Activo' o 'Cerrado'" });
     }
-    const encuesta = await surveyModel.actualizarEncuesta(survey_id, req.user.id, { title, description, status, color });
+    const encuesta = await surveyModel.actualizarEncuesta(survey_id, { title, description, status, color });
     if (!encuesta) return res.status(404).json({ error: 'Encuesta no encontrada' });
     return res.status(200).json(encuesta);
   } catch (error) {
