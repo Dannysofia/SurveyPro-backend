@@ -21,7 +21,9 @@ function traducirError(err) {
 async function enviarRespuestasPorSurveyId(req, res) {
   try {
     const { survey_id } = req.params;
-    const { submitted_by = null, answers } = req.body || {};
+    const { answers } = req.body || {};
+    // En rutas autenticadas, usar el id del usuario del JWT
+    const submitted_by = (req.user && req.user.id) ? req.user.id : null;
     if (!survey_id) return res.status(400).json({ error: 'survey_id requerido' });
     if (!Array.isArray(answers) || answers.length === 0) {
       return res.status(400).json({ error: 'answers debe ser un arreglo no vacío' });
@@ -38,7 +40,9 @@ async function enviarRespuestasPorSurveyId(req, res) {
 async function enviarRespuestasPorToken(req, res) {
   try {
     const { token } = req.params;
-    const { submitted_by = null, answers } = req.body || {};
+    const { answers } = req.body || {};
+    // En encuestas públicas, forzar submitted_by a null
+    const submitted_by = null;
     if (!token) return res.status(400).json({ error: 'token requerido' });
     if (!Array.isArray(answers) || answers.length === 0) {
       return res.status(400).json({ error: 'answers debe ser un arreglo no vacío' });

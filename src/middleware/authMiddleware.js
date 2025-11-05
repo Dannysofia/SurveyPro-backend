@@ -21,6 +21,19 @@ async function authMiddleware(req, res, next) {
                 try {
                     const encuesta = await surveyModel.obtenerEncuestaPorId(surveyId);
                     if (encuesta && encuesta.public_token != null && encuesta.status === 'Activo') {
+                        // Ruta pública: si viene Authorization, decodificar para poblar req.user sin exigirlo
+                        const authHeaderMaybe = req.header('Authorization');
+                        if (authHeaderMaybe) {
+                            const tokenMaybe = authHeaderMaybe.split(' ')[1];
+                            if (tokenMaybe) {
+                                try {
+                                    const decoded = jwt.verify(tokenMaybe, process.env.JWT_SECRET);
+                                    req.user = decoded;
+                                } catch (_) {
+                                    // Ignorar errores de verificación en rutas públicas
+                                }
+                            }
+                        }
                         return next();
                     }
                 } catch (e) {
