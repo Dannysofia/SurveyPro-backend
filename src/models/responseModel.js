@@ -67,7 +67,7 @@ async function obtenerSurveyPorToken(client, token) {
 async function cargarPreguntasDeSurvey(client, survey_id) {
   const q = `
     SELECT q.question_id, q.survey_id, q.type_id, q.question_text, q.is_required, q.position,
-           t.type_name
+           t.type_key
     FROM survey_questions q
     JOIN question_types t ON t.type_id = q.type_id
     WHERE q.survey_id = $1
@@ -75,7 +75,7 @@ async function cargarPreguntasDeSurvey(client, survey_id) {
   const r = await client.query(q, [survey_id]);
   return r.rows.map((row) => ({
     ...row,
-    kind: normalizarTipo(row.type_name),
+    kind: normalizarTipo(row.type_key),
   }));
 }
 
@@ -217,7 +217,7 @@ async function listarRespuestas(survey_id) {
     SELECT a.answer_id, a.response_id, a.question_id, a.selected_option_id, a.answer_text,
            q.question_text, q.position,
            o.option_label,
-           t.type_key, t.type_name
+           t.type_key, t.type_key
     FROM survey_answers a
     JOIN survey_questions q ON q.question_id = a.question_id
     JOIN question_types t ON t.type_id = q.type_id
@@ -234,7 +234,7 @@ async function listarRespuestas(survey_id) {
       question_id: row.question_id,
       question_text: row.question_text,
       position: row.position,
-      type_key: row.type_key || normalizarTipo(row.type_name),
+      type_key: row.type_key || normalizarTipo(row.type_key),
       selected_option_id: row.selected_option_id,
       option_label: row.option_label,
       answer_text: row.answer_text,
@@ -394,7 +394,7 @@ async function obtenerEstadisticas(survey_id) {
     FROM survey_questions q
     JOIN question_types t ON t.type_id = q.type_id
     JOIN survey_answers sa ON sa.question_id = q.question_id
-    WHERE q.survey_id = $1 AND t.type_name IN ('rating','number')
+    WHERE q.survey_id = $1 AND t.type_key IN ('rating','number')
     GROUP BY q.question_id
     ORDER BY q.question_id
   `;
@@ -406,7 +406,7 @@ async function obtenerEstadisticas(survey_id) {
     FROM survey_questions q
     JOIN question_types t ON t.type_id = q.type_id
     JOIN survey_answers sa ON sa.question_id = q.question_id
-    WHERE q.survey_id = $1 AND (t.type_name ILIKE '%text%')
+    WHERE q.survey_id = $1 AND (t.type_key ILIKE '%text%')
     GROUP BY q.question_id
     ORDER BY q.question_id
   `;
