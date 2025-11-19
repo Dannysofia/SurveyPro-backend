@@ -3,6 +3,8 @@ const questionModel = require('../models/questionModel');
 const optionModel = require('../models/optionModel');
 
 // ENCUESTAS
+
+// Crear una nueva encuesta
 async function crearEncuesta(req, res) {
   try {
     const owner_id = req.user.id;
@@ -21,6 +23,7 @@ async function crearEncuesta(req, res) {
   }
 }
 
+// Listar encuestas del usuario autenticado
 async function listarEncuestas(req, res) {
   try {
     const owner_id = req.user.id;
@@ -32,6 +35,7 @@ async function listarEncuestas(req, res) {
   }
 }
 
+// Obtener una encuesta por su ID
 async function obtenerEncuesta(req, res) {
   try {
     const { survey_id } = req.params;
@@ -44,18 +48,7 @@ async function obtenerEncuesta(req, res) {
   }
 }
 
-async function obtenerEncuestaPorToken(req, res) {
-  try {
-    const { token } = req.params;
-    const encuesta = await surveyModel.obtenerEncuestaPorToken(token);
-    if (!encuesta) return res.status(404).json({ error: 'Encuesta no encontrada' });
-    return res.status(200).json(encuesta);
-  } catch (error) {
-    console.error('Error al obtener encuesta por token:', error);
-    return res.status(500).json({ error: 'Error interno del servidor' });
-  }
-}
-
+// Actualizar una encuesta existente
 async function actualizarEncuesta(req, res) {
   try {
     const { survey_id } = req.params;
@@ -73,6 +66,7 @@ async function actualizarEncuesta(req, res) {
   }
 }
 
+// Eliminar una encuesta por su ID
 async function eliminarEncuesta(req, res) {
   try {
     const { survey_id } = req.params;
@@ -86,14 +80,16 @@ async function eliminarEncuesta(req, res) {
 }
 
 // PREGUNTAS
+
+// Crear una nueva pregunta en una encuesta
 async function crearPregunta(req, res) {
   try {
     const { survey_id } = req.params;
-    const { type_id, question_text, is_required, help_text, position } = req.body;
+    const { type_id, question_text, is_required, position } = req.body;
     if (!type_id || !question_text || typeof position !== 'number') {
       return res.status(400).json({ error: 'type_id, question_text y position son obligatorios' });
     }
-    const pregunta = await questionModel.crearPregunta({ survey_id, type_id, question_text, is_required, help_text, position });
+    const pregunta = await questionModel.crearPregunta({ survey_id, type_id, question_text, is_required, position });
     return res.status(201).json(pregunta);
   } catch (error) {
     console.error('Error al crear pregunta:', error);
@@ -101,6 +97,7 @@ async function crearPregunta(req, res) {
   }
 }
 
+// Listar todas las preguntas de una encuesta
 async function listarPreguntas(req, res) {
   try {
     const { survey_id } = req.params;
@@ -112,11 +109,12 @@ async function listarPreguntas(req, res) {
   }
 }
 
+// Actualizar una pregunta existente
 async function actualizarPregunta(req, res) {
   try {
     const { question_id } = req.params;
-    const { type_id, question_text, is_required, help_text, position } = req.body;
-    const pregunta = await questionModel.actualizarPregunta(question_id, { type_id, question_text, is_required, help_text, position });
+    const { type_id, question_text, is_required, position } = req.body;
+    const pregunta = await questionModel.actualizarPregunta(question_id, { type_id, question_text, is_required, position });
     if (!pregunta) return res.status(404).json({ error: 'Pregunta no encontrada' });
     return res.status(200).json(pregunta);
   } catch (error) {
@@ -125,6 +123,7 @@ async function actualizarPregunta(req, res) {
   }
 }
 
+// Eliminar una pregunta por su ID
 async function eliminarPregunta(req, res) {
   try {
     const { question_id } = req.params;
@@ -138,6 +137,8 @@ async function eliminarPregunta(req, res) {
 }
 
 // OPCIONES
+
+// Crear una nueva opción para una pregunta
 async function crearOpcion(req, res) {
   try {
     const { question_id } = req.params;
@@ -153,6 +154,7 @@ async function crearOpcion(req, res) {
   }
 }
 
+// Listar todas las opciones de una pregunta
 async function listarOpciones(req, res) {
   try {
     const { question_id } = req.params;
@@ -164,6 +166,7 @@ async function listarOpciones(req, res) {
   }
 }
 
+// Actualizar una opción existente
 async function actualizarOpcion(req, res) {
   try {
     const { option_id } = req.params;
@@ -177,6 +180,7 @@ async function actualizarOpcion(req, res) {
   }
 }
 
+// Eliminar una opción por su ID
 async function eliminarOpcion(req, res) {
   try {
     const { option_id } = req.params;
@@ -190,6 +194,7 @@ async function eliminarOpcion(req, res) {
 }
 
 // DETALLE COMPLETO
+
 async function obtenerEncuestaConPreguntas(req, res) {
   try {
     const { survey_id } = req.params;
@@ -214,7 +219,6 @@ module.exports = {
   crearEncuesta,
   listarEncuestas,
   obtenerEncuesta,
-  obtenerEncuestaPorToken,
   actualizarEncuesta,
   eliminarEncuesta,
   crearPregunta,

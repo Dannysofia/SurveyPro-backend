@@ -20,7 +20,7 @@ app.use(cors());
 app.use(express.json());
 
 
-// Usar las rutas de usuarios
+// Rutas
 app.use('/usuarios', userRoutes);
 app.use('/auth', authRoutes);
 app.use('/surveys', getSurveysRoutes);

@@ -1,40 +1,44 @@
-const crypto = require('crypto');
-const db = require('../db');
+const crypto = require("crypto");
+const db = require("../db");
 
-function generarTokenPublico() {
-  return crypto.randomBytes(12).toString('hex'); // 24 chars
-}
-
+// Crear una nueva encuesta
 async function crearEncuesta({ owner_id, title, description, status, color }) {
-  const public_token = generarTokenPublico();
   const query = `
-    INSERT INTO surveys (owner_id, title, description, public_token, status, color)
-    VALUES ($1, $2, $3, $4, COALESCE($5, 'Activo'), $6)
-    RETURNING survey_id, owner_id, title, description, public_token, status, color, created_at
+    INSERT INTO surveys (owner_id, title, description, status, color)
+    VALUES ($1, $2, $3, COALESCE($4, 'Activo'), $5)
+    RETURNING survey_id, owner_id, title, description, status, color, created_at
   `;
-  const values = [owner_id, title, description || null, public_token, status || null, color || null];
+  const values = [
+    owner_id,
+    title,
+    description || null,
+    status || null,
+    color || null,
+  ];
   const result = await db.query(query, values);
   return result.rows[0];
 }
 
+// Obtener encuestas, opcionalmente filtradas por owner_id
 async function obtenerEncuestas({ owner_id } = {}) {
   let query = `
-    SELECT survey_id, owner_id, title, description, public_token, status, color, created_at
+    SELECT survey_id, owner_id, title, description, status, color, created_at
     FROM surveys
   `;
   const values = [];
   if (owner_id) {
-    query += ' WHERE owner_id = $1';
+    query += " WHERE owner_id = $1";
     values.push(owner_id);
   }
-  query += ' ORDER BY created_at DESC';
+  query += " ORDER BY created_at DESC";
   const result = await db.query(query, values);
   return result.rows;
 }
 
+// Obtener una encuesta por su ID
 async function obtenerEncuestaPorId(survey_id) {
   const query = `
-    SELECT survey_id, owner_id, title, description, public_token, status, color, created_at
+    SELECT survey_id, owner_id, title, description, status, color, created_at
     FROM surveys
     WHERE survey_id = $1
     LIMIT 1
@@ -43,18 +47,11 @@ async function obtenerEncuestaPorId(survey_id) {
   return result.rows[0] || null;
 }
 
-async function obtenerEncuestaPorToken(public_token) {
-  const query = `
-    SELECT survey_id, owner_id, title, description, public_token, status, color, created_at
-    FROM surveys
-    WHERE public_token = $1
-    LIMIT 1
-  `;
-  const result = await db.query(query, [public_token]);
-  return result.rows[0] || null;
-}
-
-async function actualizarEncuesta(survey_id, { title, description, status, color }) {
+// Actualizar una encuesta existente
+async function actualizarEncuesta(
+  survey_id,
+  { title, description, status, color }
+) {
   const query = `
     UPDATE surveys
     SET title = COALESCE($2, title),
@@ -62,13 +59,20 @@ async function actualizarEncuesta(survey_id, { title, description, status, color
         status = COALESCE($4, status),
         color = COALESCE($5, color)
     WHERE survey_id = $1
-    RETURNING survey_id, owner_id, title, description, public_token, status, color, created_at
+    RETURNING survey_id, owner_id, title, description, status, color, created_at
   `;
-  const values = [survey_id, title || null, description || null, status || null, color || null];
+  const values = [
+    survey_id,
+    title || null,
+    description || null,
+    status || null,
+    color || null,
+  ];
   const result = await db.query(query, values);
   return result.rows[0] || null;
 }
 
+// Eliminar una encuesta por su ID
 async function eliminarEncuesta(survey_id) {
   const query = `
     DELETE FROM surveys WHERE survey_id = $1
@@ -82,8 +86,6 @@ module.exports = {
   crearEncuesta,
   obtenerEncuestas,
   obtenerEncuestaPorId,
-  obtenerEncuestaPorToken,
   actualizarEncuesta,
   eliminarEncuesta,
 };
-

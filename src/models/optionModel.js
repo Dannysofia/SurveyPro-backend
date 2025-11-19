@@ -1,5 +1,6 @@
-const db = require('../db');
+const db = require("../db");
 
+// Crear una nueva opción para una pregunta
 async function crearOpcion({ question_id, option_label, position }) {
   const query = `
     INSERT INTO question_options (question_id, option_label, position)
@@ -11,6 +12,7 @@ async function crearOpcion({ question_id, option_label, position }) {
   return result.rows[0];
 }
 
+// Obtener todas las opciones para una pregunta
 async function obtenerOpciones(question_id) {
   const query = `
     SELECT option_id, question_id, option_label, position
@@ -22,6 +24,7 @@ async function obtenerOpciones(question_id) {
   return result.rows;
 }
 
+// Actualizar una opción existente
 async function actualizarOpcion(option_id, { option_label, position }) {
   const query = `
     UPDATE question_options
@@ -35,6 +38,7 @@ async function actualizarOpcion(option_id, { option_label, position }) {
   return result.rows[0] || null;
 }
 
+// Eliminar una opción por su ID
 async function eliminarOpcion(option_id) {
   const query = `DELETE FROM question_options WHERE option_id = $1`;
   const result = await db.query(query, [option_id]);
@@ -47,4 +51,3 @@ module.exports = {
   actualizarOpcion,
   eliminarOpcion,
 };
-

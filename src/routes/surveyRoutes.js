@@ -4,9 +4,6 @@ const surveyController = require('../controllers/surveyController');
 const responseController = require('../controllers/responseController');
 const authMiddleware = require('../middleware/authMiddleware');
 
-router.get('/publico/:token', surveyController.obtenerEncuestaPorToken);
-router.post('/publico/:token/respuestas', responseController.enviarRespuestasPorToken);
-
 router.use(authMiddleware);
 
 // Encuestas

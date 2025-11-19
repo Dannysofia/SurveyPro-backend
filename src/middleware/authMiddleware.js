@@ -3,7 +3,7 @@ const surveyModel = require('../models/surveyModel');
 
 async function authMiddleware(req, res, next) {
     try {
-        // Permitir sin Authorization para encuestas públicas activas en rutas específicas
+        // Permitir sin Authorization, para encuestas públicas activas en rutas específicas
         // GET /encuestas/:id/detalle
         // POST /encuestas/:id/respuestas
         if (req.baseUrl === '/encuestas') {
@@ -20,7 +20,7 @@ async function authMiddleware(req, res, next) {
             if (surveyId) {
                 try {
                     const encuesta = await surveyModel.obtenerEncuestaPorId(surveyId);
-                    if (encuesta && encuesta.public_token != null && encuesta.status === 'Activo') {
+                    if (encuesta && encuesta.status === 'Activo') {
                         // Ruta pública: si viene Authorization, decodificar para poblar req.user sin exigirlo
                         const authHeaderMaybe = req.header('Authorization');
                         if (authHeaderMaybe) {

@@ -53,17 +53,6 @@ async function obtenerSurveyPorId(client, survey_id) {
   return r.rows[0] || null;
 }
 
-async function obtenerSurveyPorToken(client, token) {
-  const q = `
-    SELECT survey_id, status
-    FROM surveys
-    WHERE public_token = $1
-    LIMIT 1
-  `;
-  const r = await client.query(q, [token]);
-  return r.rows[0] || null;
-}
-
 async function cargarPreguntasDeSurvey(client, survey_id) {
   const q = `
     SELECT q.question_id, q.survey_id, q.type_id, q.question_text, q.is_required, q.position,
