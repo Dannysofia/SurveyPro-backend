@@ -64,7 +64,7 @@ async function actualizarEncuesta(
   const values = [
     survey_id,
     title || null,
-    description || null,
+    description || null || "",
     status || null,
     color || null,
   ];
